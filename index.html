@@ -1,0 +1,1102 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TypeScript Code Generator | WoT Team</title>
+    <style>
+        /* Import fonts */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,400&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --font-size: 16px;
+            --background: #000511;
+            --foreground: #ffffff;
+            --card: rgba(255, 255, 255, 0.05);
+            --border: rgba(0, 112, 243, 0.3);
+            --cyan: #00c2ff;
+            --blue: #0070f3;
+            --purple: #a855f7;
+            --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            --font-mono: 'JetBrains Mono', 'SF Mono', 'Fira Code', monospace;
+        }
+
+        body {
+            font-family: var(--font-sans);
+            background: var(--background);
+            color: var(--foreground);
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+            font-weight: 400;
+            line-height: 1.5;
+        }
+
+        h1 {
+            font-size: 3.75rem;
+            font-weight: 300;
+            line-height: 1.5;
+            letter-spacing: -0.02em;
+        }
+
+        @media (min-width: 768px) {
+            h1 {
+                font-size: 4.5rem;
+            }
+        }
+
+        h2 {
+            font-size: 2.5rem;
+            font-weight: 400;
+            line-height: 1.2;
+            letter-spacing: -0.02em;
+        }
+
+        h3 {
+            font-size: 1.5rem;
+            font-weight: 500;
+            line-height: 1.3;
+        }
+
+        .text-sm {
+            font-size: 0.875rem;
+        }
+
+        .text-muted {
+            color: #6b7280;
+        }
+
+        code, pre, textarea, .font-mono {
+            font-family: 'JetBrains Mono', 'SF Mono', 'Fira Code', monospace;
+        }
+
+        /* Background Pattern */
+        .background-pattern {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .grid-pattern {
+            position: absolute;
+            inset: 0;
+            opacity: 0.05;
+        }
+
+        .particle {
+            position: absolute;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(0, 194, 255, 0.6) 0%, transparent 70%);
+            animation: float 5s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); opacity: 0.4; }
+            50% { transform: translateY(-30px); opacity: 0.8; }
+        }
+
+        .scan-line {
+            position: absolute;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, rgba(0, 194, 255, 0.15), transparent);
+            animation: slide 12s linear infinite;
+        }
+
+        @keyframes slide {
+            0% { top: -5%; }
+            100% { top: 105%; }
+        }
+
+        .blob {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(120px);
+            animation: pulse 8s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 0.3; }
+            50% { transform: scale(1.2); opacity: 0.5; }
+        }
+
+        /* Glassmorphism */
+        .glass {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(0, 112, 243, 0.2);
+            box-shadow: 0 0 30px rgba(0, 112, 243, 0.15), inset 0 0 30px rgba(0, 112, 243, 0.05);
+            transition: all 0.3s ease;
+        }
+
+        .glass-hover:hover {
+            border-color: rgba(0, 194, 255, 0.4);
+            box-shadow: 0 0 30px rgba(0, 112, 243, 0.2);
+        }
+
+        /* Buttons */
+        .btn-primary {
+            background: linear-gradient(135deg, #0070f3, #00c2ff);
+            border: 1px solid rgba(0, 194, 255, 0.3);
+            color: white;
+            padding: 1.5rem 2rem;
+            font-size: 1.125rem;
+            font-weight: 500;
+            border-radius: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            box-shadow: 0 0 40px rgba(0, 112, 243, 0.6);
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-1px);
+            background: linear-gradient(135deg, #0066dd, #00aaff);
+            box-shadow: 0 0 50px rgba(0, 112, 243, 0.8);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .btn-back {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(0, 112, 243, 0.3);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            border-radius: 0.75rem;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-back:hover {
+            border-color: rgba(0, 194, 255, 0.5);
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        /* Status badge */
+        .status-badge {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(0, 0, 0, 0.4);
+            padding: 0.5rem 1rem;
+            border-radius: 2rem;
+            font-size: 0.75rem;
+            font-weight: 500;
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(0, 112, 243, 0.3);
+        }
+
+        .status-indicator {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #6b7280;
+            transition: all 0.3s ease;
+        }
+
+        .status-indicator.online {
+            background: #22c55e;
+            box-shadow: 0 0 8px #22c55e;
+        }
+
+        .status-indicator.offline {
+            background: #ef4444;
+        }
+
+        /* Tabs */
+        .tabs-list {
+            display: flex;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(0, 112, 243, 0.2);
+            border-radius: 0.75rem;
+            padding: 0.375rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .tab-trigger {
+            flex: 1;
+            padding: 0.5rem 1rem;
+            text-align: center;
+            background: transparent;
+            border: none;
+            color: #6b7280;
+            cursor: pointer;
+            border-radius: 0.5rem;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            font-size: 0.875rem;
+        }
+
+        .tab-trigger.active {
+            background: linear-gradient(135deg, #0070f3, #00c2ff);
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Inputs */
+        textarea, .file-dropzone {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(0, 112, 243, 0.3);
+            border-radius: 0.75rem;
+            padding: 1rem;
+            color: #5ee0ff;
+            resize: vertical;
+            width: 100%;
+            outline: none;
+            transition: all 0.3s ease;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.875rem;
+        }
+
+        textarea:focus, .file-dropzone:hover {
+            border-color: rgba(0, 194, 255, 0.5);
+        }
+
+        /* Code block */
+        .code-block {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 1rem;
+            overflow: hidden;
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(0, 112, 243, 0.2);
+            position: relative;
+        }
+
+        .code-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid rgba(0, 112, 243, 0.2);
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        .window-dots {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .dot-red { background: #ef4444; }
+        .dot-yellow { background: #eab308; }
+        .dot-green { background: #22c55e; }
+
+        .code-content {
+            padding: 1.5rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.875rem;
+            color: #5ee0ff;
+            white-space: pre-wrap;
+            word-break: break-word;
+            min-height: 200px;
+            line-height: 1.6;
+        }
+
+        .icon-btn {
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 0.5rem;
+            color: #9ca3af;
+            transition: all 0.3s ease;
+        }
+
+        .icon-btn:hover {
+            color: #00c2ff;
+            background: rgba(0, 194, 255, 0.1);
+        }
+
+        /* Error message */
+        .error-message {
+            background: rgba(220, 80, 40, 0.18);
+            border-left: 4px solid #ff884d;
+            padding: 0.75rem 1rem;
+            border-radius: 1rem;
+            margin-top: 1rem;
+            color: #ffc9a5;
+            font-size: 0.85rem;
+        }
+
+        /* Developer Cards */
+        .developers-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        @media (min-width: 768px) {
+            .developers-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        .developer-card {
+            position: relative;
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(0, 112, 243, 0.2);
+            border-radius: 1.5rem;
+            padding: 2rem;
+            transition: all 0.4s ease;
+        }
+
+        .developer-card:hover {
+            border-color: rgba(0, 194, 255, 0.5);
+            transform: translateY(-4px);
+            box-shadow: 0 0 40px rgba(0, 112, 243, 0.2);
+        }
+
+        .developer-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            overflow: hidden;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(135deg, #0070f3, #00c2ff);
+        }
+
+        .developer-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .developer-avatar .avatar-fallback {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            font-weight: 600;
+            color: white;
+            background: linear-gradient(135deg, #0070f3, #00c2ff);
+        }
+
+        .developer-name {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, #fff, #60a5fa);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .developer-role {
+            font-size: 0.875rem;
+            color: #00c2ff;
+            margin-bottom: 1rem;
+        }
+
+        .developer-description {
+            font-size: 0.875rem;
+            color: #6b7280;
+            line-height: 1.6;
+        }
+
+        .telegram-card-btn {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: rgba(0, 136, 204, 0.2);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(0, 136, 204, 0.4);
+            border-radius: 2rem;
+            padding: 0.4rem 0.8rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            color: #fff;
+            text-decoration: none;
+            font-size: 0.75rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            z-index: 2;
+        }
+
+        .telegram-card-btn:hover {
+            background: rgba(0, 136, 204, 0.4);
+            border-color: #08c;
+            transform: translateY(-2px);
+        }
+
+        .footer-block {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(0, 112, 243, 0.2);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            text-align: center;
+        }
+
+        /* Utility */
+        .container {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 3rem 1.5rem;
+            position: relative;
+            z-index: 10;
+        }
+
+        .container-developers {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 4rem 1.5rem;
+            position: relative;
+            z-index: 10;
+            min-height: 100vh;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        @media (min-width: 1024px) {
+            .grid-2 {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        .text-center { text-align: center; }
+        .mt-8 { margin-top: 2rem; }
+        .mb-4 { margin-bottom: 1rem; }
+        .mb-6 { margin-bottom: 1.5rem; }
+        .mb-12 { margin-bottom: 3rem; }
+        .flex { display: flex; }
+        .items-center { align-items: center; }
+        .justify-between { justify-content: space-between; }
+        .justify-center { justify-content: center; }
+        .gap-2 { gap: 0.5rem; }
+        .gap-3 { gap: 0.75rem; }
+        .gap-4 { gap: 1rem; }
+    </style>
+</head>
+<body>
+    <div class="background-pattern">
+        <div class="grid-pattern">
+            <svg width="100%" height="100%">
+                <defs>
+                    <pattern id="grid" width="60" height="60" patternUnits="userSpaceOnUse">
+                        <path d="M 60 0 L 0 0 0 60" fill="none" stroke="rgb(0, 194, 255)" stroke-width="0.5"/>
+                    </pattern>
+                </defs>
+                <rect width="100%" height="100%" fill="url(#grid)"/>
+            </svg>
+        </div>
+        <div class="particle" style="top: 15%; right: 20%; width: 8px; height: 8px;"></div>
+        <div class="particle" style="bottom: 30%; left: 15%; width: 6px; height: 6px; animation-delay: 1s;"></div>
+        <div class="scan-line"></div>
+        <div class="blob" style="top: 25%; left: 33%; width: 500px; height: 500px; background: radial-gradient(circle, rgba(0, 112, 243, 0.8) 0%, rgba(0, 194, 255, 0.4) 50%, transparent 70%);"></div>
+    </div>
+
+    <!-- Main Page -->
+    <div id="mainPage">
+        <div class="container">
+            <div class="flex justify-between items-center mb-12">
+                <div class="glass glass-hover" style="padding: 0.75rem 1rem; border-radius: 0.75rem; display: flex; align-items: center; gap: 0.75rem;">
+                    <div style="width: 32px; height: 32px;">
+                        <svg viewBox="0 0 32 32" fill="none">
+                            <path d="M16 2L28 9V23L16 30L4 23V9L16 2Z" stroke="url(#grad)" stroke-width="1.5" fill="url(#grad2)"/>
+                            <path d="M12 12L9 16L12 20M20 12L23 16L20 20M17 10L15 22" stroke="#00c2ff" stroke-width="1.5"/>
+                            <defs>
+                                <linearGradient id="grad" x1="4" y1="2" x2="28" y2="30"><stop offset="0%" stop-color="#00c2ff"/><stop offset="100%" stop-color="#0070f3"/></linearGradient>
+                                <linearGradient id="grad2" x1="4" y1="2" x2="28" y2="30"><stop offset="0%" stop-color="#00c2ff" stop-opacity="0.1"/><stop offset="100%" stop-color="#0070f3" stop-opacity="0.05"/></linearGradient>
+                            </defs>
+                        </svg>
+                    </div>
+                    <div>
+                        <div style="font-size: 0.75rem; font-weight: 600; color: #00c2ff;">WoT</div>
+                        <div style="font-size: 0.625rem; color: #9ca3af;">TEAM</div>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3">
+                    <div class="status-badge">
+                        <div class="status-indicator" id="statusIndicator"></div>
+                        <span id="statusText" style="color: #b8c7e7;">Проверка...</span>
+                    </div>
+                    <button id="developersBtn" class="glass glass-hover" style="padding: 0.625rem 1.5rem; border-radius: 0.75rem; font-size: 0.875rem; font-weight: 500; cursor: pointer; border: none; color: white;">
+                        👥 Developers
+                    </button>
+                </div>
+            </div>
+
+            <div class="text-center mb-12">
+                <div class="glass" style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; border-radius: 999px; margin-bottom: 1.5rem;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#00c2ff" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                    <span style="color: #60a5fa; font-size: 0.875rem;">WORLD OF TANKS TEAM</span>
+                </div>
+                <h1>
+                    <span style="background: linear-gradient(135deg, #fff, #60a5fa, #5ee0ff); -webkit-background-clip: text; background-clip: text; color: transparent;">
+                        Генератор TypeScript кода
+                    </span>
+                </h1>
+                <p style="color: #9ca3af; font-size: 1.125rem; margin-top: 1rem; font-weight: 300;">
+                    Преобразуйте JSON в типизированный TypeScript код за секунды
+                </p>
+            </div>
+
+            <div class="grid-2">
+                <div class="glass glass-hover" style="padding: 1.5rem; border-radius: 1rem;">
+                    <div class="flex items-center gap-2 mb-4">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00c2ff" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                        <h3>Загрузите файл</h3>
+                        <span style="font-size: 0.75rem; color: #6b7280;">(любой формат)</span>
+                    </div>
+                    <div id="dropzone" class="file-dropzone" style="text-align: center; cursor: pointer;">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#00c2ff" stroke-width="1.5" style="margin: 0 auto 0.75rem auto; opacity: 0.6;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                        <p id="fileName" style="color: #9ca3af;">Нажмите или перетащите файл</p>
+                        <p style="font-size: 0.75rem; color: #6b7280; margin-top: 0.25rem;">JSON, TXT, PDF, DOCX, XLSX, PNG, JPG</p>
+                    </div>
+                    <input type="file" id="fileInput" accept="*/*" style="display: none;">
+                </div>
+
+                <div class="glass glass-hover" style="padding: 1.5rem; border-radius: 1rem;">
+                    <div class="flex items-center gap-2 mb-4">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00c2ff" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+                        <h3>JSON пример</h3>
+                        <span style="font-size: 0.75rem; color: #6b7280;">(структура типа)</span>
+                    </div>
+                    <textarea id="jsonInput" rows="5">{
+  "organizationName": "OOO \"Рога и копыта\"",
+  "innKpp": "1234567890"
+}</textarea>
+                </div>
+            </div>
+
+            <div style="margin-bottom: 2rem;">
+                <button id="generateBtn" class="btn-primary">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+                    Сгенерировать TypeScript код
+                </button>
+            </div>
+
+            <div id="errorContainer"></div>
+
+            <div>
+                <div class="tabs-list">
+                    <button class="tab-trigger active" data-tab="code">TypeScript код</button>
+                    <button class="tab-trigger" data-tab="docs">Документация API</button>
+                </div>
+
+                <div id="tab-code" class="tab-content active">
+                    <div class="code-block">
+                        <div class="code-header">
+                            <div class="window-dots">
+                                <div class="dot dot-red"></div>
+                                <div class="dot dot-yellow"></div>
+                                <div class="dot dot-green"></div>
+                                <span style="margin-left: 1rem; color: #6b7280; font-family: monospace; font-size: 0.875rem;">generated.ts</span>
+                            </div>
+                            <div>
+                                <button id="copyBtn" class="icon-btn" title="Копировать">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                                </button>
+                                <button id="downloadBtn" class="icon-btn" title="Скачать">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                                </button>
+                            </div>
+                        </div>
+                        <div id="generatedCode" class="code-content">
+                            Здесь появится сгенерированный TypeScript код после нажатия кнопки "Сгенерировать"
+                        </div>
+                    </div>
+                </div>
+
+                <div id="tab-docs" class="tab-content">
+                    <div class="glass" style="padding: 1.5rem; border-radius: 1rem;">
+                        <h3 style="margin-bottom: 1.5rem; font-weight: 300;">📡 Документация API</h3>
+                        <div class="glass glass-hover" style="padding: 1.25rem; margin-bottom: 1rem; border-radius: 0.75rem;">
+                            <h4 style="margin-bottom: 0.5rem;">Endpoint</h4>
+                            <p style="font-size: 0.875rem; color: #9ca3af;"><code style="background: #1a1a2e; padding: 0.2rem 0.5rem; border-radius: 0.5rem;">POST http://95.81.121.81:8000/generate</code></p>
+                        </div>
+                        <div class="glass glass-hover" style="padding: 1.25rem; margin-bottom: 1rem; border-radius: 0.75rem;">
+                            <h4 style="margin-bottom: 0.5rem;">Параметры</h4>
+                            <p style="font-size: 0.875rem; color: #9ca3af;">• <code>file</code> — бинарные данные файла<br>• <code>json_example</code> — строка JSON</p>
+                        </div>
+                        <div class="glass glass-hover" style="padding: 1.25rem; border-radius: 0.75rem;">
+                            <h4 style="margin-bottom: 0.5rem;">Проверка сервера</h4>
+                            <p style="font-size: 0.875rem; color: #9ca3af;"><code>GET http://95.81.121.81:8000/health</code></p>
+                            <p style="font-size: 0.75rem; margin-top: 0.5rem;">📖 <a href="http://95.81.121.81:8000/docs" target="_blank" style="color: #00c2ff;">Полная документация</a></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-8">
+                <div class="footer-block">
+                    <p class="text-sm" style="color: rgba(107, 114, 128, 0.8);">HACKATON 2026 | World of Tanks Team</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Developers Page -->
+    <div id="developersPage" style="display: none;">
+        <div class="container-developers">
+            <div class="flex justify-between items-center mb-12">
+                <div class="glass glass-hover" style="padding: 0.75rem 1rem; border-radius: 0.75rem; display: flex; align-items: center; gap: 0.75rem;">
+                    <div style="width: 32px; height: 32px;">
+                        <svg viewBox="0 0 32 32" fill="none">
+                            <path d="M16 2L28 9V23L16 30L4 23V9L16 2Z" stroke="url(#grad3)" stroke-width="1.5" fill="url(#grad4)"/>
+                            <path d="M12 12L9 16L12 20M20 12L23 16L20 20M17 10L15 22" stroke="#00c2ff" stroke-width="1.5"/>
+                            <defs>
+                                <linearGradient id="grad3" x1="4" y1="2" x2="28" y2="30"><stop offset="0%" stop-color="#00c2ff"/><stop offset="100%" stop-color="#0070f3"/></linearGradient>
+                                <linearGradient id="grad4" x1="4" y1="2" x2="28" y2="30"><stop offset="0%" stop-color="#00c2ff" stop-opacity="0.1"/><stop offset="100%" stop-color="#0070f3" stop-opacity="0.05"/></linearGradient>
+                            </defs>
+                        </svg>
+                    </div>
+                    <div>
+                        <div style="font-size: 0.75rem; font-weight: 600; color: #00c2ff;">WoT</div>
+                        <div style="font-size: 0.625rem; color: #9ca3af;">TEAM</div>
+                    </div>
+                </div>
+                <button id="backToMainBtn" class="btn-back">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                    На главную
+                </button>
+            </div>
+
+            <div class="text-center mb-12">
+                <div class="glass" style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; border-radius: 999px; margin-bottom: 1.5rem;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#00c2ff" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    <span style="color: #60a5fa; font-size: 0.875rem;">КОМАНДА РАЗРАБОТЧИКОВ</span>
+                </div>
+                <h2>Создатели проекта</h2>
+                <p style="color: #9ca3af;">Талантливая команда, стоящая за генератором TypeScript кода</p>
+            </div>
+
+            <div id="developersGrid" class="developers-grid"></div>
+
+            <div class="text-center mt-8">
+                <div class="footer-block" style="display: inline-block; width: auto; padding: 1rem 2rem;">
+                    <p class="text-sm" style="color: rgba(107, 114, 128, 0.8);">HACKATON 2026 | World of Tanks Team</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ========== Данные разработчиков (встроенные) ==========
+        const DEVELOPERS_DATA = {
+            developers: [
+                {
+                    id: "whokilledsvxll",
+                    name: "whokilledsvxll / Леша",
+                    role: "Lead Developer & Architect",
+                    description: "Главный архитектор проекта. Разработал API генератора TypeScript кода, реализовал парсинг JSON и создание типизированных интерфейсов.",
+                    avatar: "https://image2url.com/r2/default/images/1774131753902-b75f28d9-229a-4505-bb05-2ffde94d38d1.png",
+                    telegram: "https://t.me/whokilledsvxll"
+                },
+                {
+                    id: "sunjaku",
+                    name: "sunjaku / Арина",
+                    role: "Frontend Engineer & UI/UX",
+                    description: "Отвечает за визуальную составляющую. Создала анимации, glassmorphism эффекты и адаптивный дизайн интерфейса. В паре с swippy000.",
+                    avatar: "https://image2url.com/r2/default/images/1774131796032-5c9e1544-719c-49e2-bcff-3ab84b747d57.png",
+                    telegram: "https://t.me/sunjaku"
+                },
+                {
+                    id: "swippy000",
+                    name: "swippy000 / Саша",
+                    role: "Fronted & UI/UX",
+                    description: "Отвечает за визуальную составляющую. Создала анимации, glassmorphism эффекты и адаптивный дизайн интерфейса. В паре с sunjaku.",
+                    avatar: "https://image2url.com/r2/default/images/1774131778113-7a49fa1c-6a8e-49aa-a8ad-5da11d525db9.png",
+                    telegram: "https://t.me/swippy000"
+                },
+                {
+                    id: "ravensqw",
+                    name: "Ravensqw / Степа",
+                    role: "Tester & Fronted",
+                    description: "Отвечает за тестирование, визуалицию и поддержку WEB-интерфейса. Обеспечивает стабильность работы сайта.",
+                    avatar: "https://image2url.com/r2/default/images/1774131824857-7555a1c0-4e18-4f01-8106-4f01dcf14d09.png",
+                    telegram: "https://t.me/Ravensqw"
+                }
+            ]
+        };
+
+        // ========== Конфигурация API ==========
+        const BACKEND_URL = 'http://95.81.121.81:8000/generate';
+        const HEALTH_URL = 'http://95.81.121.81:8000/health';
+
+        // ========== DOM элементы ==========
+        const mainPage = document.getElementById('mainPage');
+        const developersPage = document.getElementById('developersPage');
+        const developersBtn = document.getElementById('developersBtn');
+        const backToMainBtn = document.getElementById('backToMainBtn');
+        const jsonInput = document.getElementById('jsonInput');
+        const generateBtn = document.getElementById('generateBtn');
+        const generatedCodeDiv = document.getElementById('generatedCode');
+        const copyBtn = document.getElementById('copyBtn');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const fileInput = document.getElementById('fileInput');
+        const dropzone = document.getElementById('dropzone');
+        const fileName = document.getElementById('fileName');
+        const errorContainer = document.getElementById('errorContainer');
+        const statusIndicator = document.getElementById('statusIndicator');
+        const statusText = document.getElementById('statusText');
+
+        let selectedFile = null;
+        let serverOnline = false;
+        let copiedTimeout = null;
+
+        // ========== Навигация ==========
+        function showMainPage() {
+            mainPage.style.display = 'block';
+            developersPage.style.display = 'none';
+        }
+
+        function showDevelopersPage() {
+            mainPage.style.display = 'none';
+            developersPage.style.display = 'block';
+            renderDevelopers();
+        }
+
+        developersBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            showDevelopersPage();
+        });
+
+        backToMainBtn.addEventListener('click', () => {
+            showMainPage();
+        });
+
+        if (window.location.hash === '#developers') {
+            showDevelopersPage();
+        }
+
+        // ========== Рендер разработчиков ==========
+        function renderDevelopers() {
+            const grid = document.getElementById('developersGrid');
+            let html = '';
+            for (const dev of DEVELOPERS_DATA.developers) {
+                html += `
+                    <div class="developer-card">
+                        <a href="${dev.telegram}" target="_blank" rel="noopener noreferrer" class="telegram-card-btn" onclick="event.stopPropagation()">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21.5 4.5L2.5 12.5L8.5 15.5L12.5 21.5L21.5 4.5Z"/>
+                                <path d="M8.5 15.5L12.5 11.5"/>
+                            </svg>
+                            Telegram
+                        </a>
+                        <div class="developer-avatar">
+                            <img src="${dev.avatar}" alt="${dev.name}" onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=\\'avatar-fallback\\'>${dev.name.charAt(0).toUpperCase()}</div>'">
+                        </div>
+                        <div class="developer-name">${escapeHtml(dev.name)}</div>
+                        <div class="developer-role">${escapeHtml(dev.role)}</div>
+                        <div class="developer-description">${escapeHtml(dev.description)}</div>
+                    </div>
+                `;
+            }
+            grid.innerHTML = html;
+        }
+
+        // ========== Проверка сервера ==========
+        async function checkServerHealth() {
+            try {
+                statusIndicator.className = 'status-indicator';
+                statusText.textContent = 'Проверка...';
+                
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 5000);
+                
+                const response = await fetch(HEALTH_URL, {
+                    method: 'GET',
+                    signal: controller.signal
+                });
+                
+                clearTimeout(timeoutId);
+                
+                if (response.ok) {
+                    serverOnline = true;
+                    statusIndicator.classList.add('online');
+                    statusText.textContent = 'Сервер онлайн';
+                } else {
+                    serverOnline = false;
+                    statusIndicator.classList.add('offline');
+                    statusText.textContent = 'Сервер офлайн';
+                }
+            } catch (error) {
+                serverOnline = false;
+                statusIndicator.classList.add('offline');
+                statusText.textContent = 'Сервер недоступен';
+            }
+        }
+
+        // ========== UI Helpers ==========
+        function showError(msg) {
+            errorContainer.innerHTML = `<div class="error-message">⚠️ ${escapeHtml(msg)}</div>`;
+        }
+
+        function clearError() {
+            errorContainer.innerHTML = '';
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/[&<>]/g, function(m) {
+                if (m === '&') return '&amp;';
+                if (m === '<') return '&lt;';
+                if (m === '>') return '&gt;';
+                return m;
+            });
+        }
+
+        function setLoadingUI() {
+            generatedCodeDiv.textContent = '⏳ Генерация кода... Отправка запроса на сервер';
+            clearError();
+        }
+
+        function updateFileUI(file) {
+            if (file) {
+                fileName.textContent = file.name + ` (${(file.size / 1024).toFixed(1)} KB)`;
+                fileName.style.color = '#00c2ff';
+            } else {
+                fileName.textContent = 'Нажмите или перетащите файл';
+                fileName.style.color = '#9ca3af';
+            }
+        }
+
+        function handleFileSelection(file) {
+            if (!file) {
+                selectedFile = null;
+                updateFileUI(null);
+                return;
+            }
+            if (file.size > 50 * 1024 * 1024) {
+                showError("Файл слишком большой. Максимум 50 МБ.");
+                selectedFile = null;
+                fileInput.value = '';
+                updateFileUI(null);
+                return;
+            }
+            selectedFile = file;
+            updateFileUI(file);
+            clearError();
+        }
+
+        // ========== Отправка на сервер ==========
+        async function sendToServer(jsonString) {
+            if (!selectedFile) {
+                throw new Error('Файл не выбран');
+            }
+            
+            if (!serverOnline) {
+                throw new Error('Сервер недоступен. Проверьте подключение к интернету или попробуйте позже.');
+            }
+            
+            const formData = new FormData();
+            formData.append('file', selectedFile);
+            formData.append('json_example', jsonString);
+            
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 60000);
+            
+            try {
+                const response = await fetch(BACKEND_URL, {
+                    method: 'POST',
+                    body: formData,
+                    signal: controller.signal
+                });
+                clearTimeout(timeoutId);
+                
+                if (!response.ok) {
+                    let errorDetail = '';
+                    try {
+                        const errData = await response.json();
+                        errorDetail = errData.detail || errData.message || '';
+                    } catch (e) {
+                        errorDetail = response.statusText;
+                    }
+                    throw new Error(`Сервер ответил ${response.status}: ${errorDetail}`);
+                }
+                
+                const data = await response.json();
+                
+                if (!data.ts_code) {
+                    throw new Error('Ответ сервера не содержит ts_code');
+                }
+                
+                return data;
+            } catch (err) {
+                clearTimeout(timeoutId);
+                if (err.name === 'AbortError') {
+                    throw new Error('Превышено время ожидания (60 сек)');
+                }
+                throw err;
+            }
+        }
+
+        // ========== Генерация ==========
+        async function generateTypeScript() {
+            if (!selectedFile) {
+                showError('Пожалуйста, выберите файл для загрузки.');
+                return;
+            }
+            
+            let jsonExampleValue = jsonInput.value.trim();
+            if (jsonExampleValue === "") {
+                showError('Поле JSON примера не может быть пустым.');
+                return;
+            }
+            
+            try {
+                JSON.parse(jsonExampleValue);
+            } catch (e) {
+                showError('Некорректный JSON. Проверьте синтаксис.');
+                return;
+            }
+            
+            setLoadingUI();
+            
+            try {
+                const result = await sendToServer(jsonExampleValue);
+                const tsCode = result.ts_code || '';
+                
+                generatedCodeDiv.textContent = tsCode;
+                await checkServerHealth();
+                clearError();
+            } catch (err) {
+                let friendlyMsg = err.message;
+                if (err.message.includes('Failed to fetch') || err.message.includes('NetworkError')) {
+                    friendlyMsg = `Не удалось соединиться с сервером. Проверьте интернет-соединение.`;
+                    serverOnline = false;
+                    statusIndicator.classList.add('offline');
+                    statusText.textContent = 'Сервер недоступен';
+                }
+                showError(friendlyMsg);
+                generatedCodeDiv.textContent = `// Ошибка генерации\n// ${friendlyMsg}`;
+            }
+        }
+
+        // ========== Копирование и скачивание ==========
+        if (copyBtn) {
+            copyBtn.addEventListener('click', () => {
+                const text = generatedCodeDiv.textContent;
+                if (!text || text.includes('Здесь появится') || text.includes('Ошибка')) {
+                    showError('Нечего копировать — дождитесь генерации кода');
+                    return;
+                }
+                navigator.clipboard.writeText(text).then(() => {
+                    const originalHtml = copyBtn.innerHTML;
+                    copyBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+                    if (copiedTimeout) clearTimeout(copiedTimeout);
+                    copiedTimeout = setTimeout(() => {
+                        copyBtn.innerHTML = originalHtml;
+                    }, 2000);
+                });
+            });
+        }
+        
+        if (downloadBtn) {
+            downloadBtn.addEventListener('click', () => {
+                const content = generatedCodeDiv.textContent;
+                if (!content || content.includes('Здесь появится')) {
+                    showError('Нечего скачивать — сначала сгенерируйте код');
+                    return;
+                }
+                const blob = new Blob([content], { type: 'text/typescript' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'generated.ts';
+                a.click();
+                URL.revokeObjectURL(url);
+            });
+        }
+        
+        // ========== Файловое поле ==========
+        if (dropzone) {
+            dropzone.addEventListener('click', () => fileInput.click());
+            
+            dropzone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                dropzone.style.borderColor = '#00c2ff';
+                dropzone.style.background = 'rgba(0, 194, 255, 0.1)';
+            });
+            
+            dropzone.addEventListener('dragleave', () => {
+                dropzone.style.borderColor = 'rgba(0, 112, 243, 0.3)';
+                dropzone.style.background = 'rgba(0, 0, 0, 0.4)';
+            });
+            
+            dropzone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropzone.style.borderColor = 'rgba(0, 112, 243, 0.3)';
+                dropzone.style.background = 'rgba(0, 0, 0, 0.4)';
+                const file = e.dataTransfer.files[0];
+                if (file) {
+                    handleFileSelection(file);
+                    const dataTransfer = new DataTransfer();
+                    dataTransfer.items.add(file);
+                    fileInput.files = dataTransfer.files;
+                }
+            });
+        }
+        
+        if (fileInput) {
+            fileInput.addEventListener('change', (e) => {
+                if (e.target.files[0]) handleFileSelection(e.target.files[0]);
+            });
+        }
+        
+        // ========== Табы ==========
+        const tabs = document.querySelectorAll('.tab-trigger');
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                const tabId = tab.dataset.tab;
+                tabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                document.querySelectorAll('.tab-content').forEach(content => {
+                    content.classList.remove('active');
+                });
+                document.getElementById(`tab-${tabId}`).classList.add('active');
+            });
+        });
+        
+        // ========== Инициализация ==========
+        generateBtn.addEventListener('click', generateTypeScript);
+        checkServerHealth();
+        setInterval(checkServerHealth, 30000);
+    </script>
+</body>
+</html>
